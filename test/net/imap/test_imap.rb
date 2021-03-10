@@ -60,17 +60,13 @@ class IMAPTest < Test::Unit::TestCase
     assert_match(/\A24-Jul-2009 01:23 [+\-]\d{4}\z/, s)
   end
 
-  if defined?(OpenSSL::SSL::SSLError)
+  if defined?(OpenSSL)
     def test_imaps_unknown_ca
       assert_raise(OpenSSL::SSL::SSLError) do
         imaps_test do |port|
-          begin
-            Net::IMAP.new("localhost",
-                          :port => port,
-                          :ssl => true)
-          rescue SystemCallError
-            skip $!
-          end
+          Net::IMAP.new("localhost",
+                        :port => port,
+                        :ssl => true)
         end
       end
     end
@@ -78,13 +74,9 @@ class IMAPTest < Test::Unit::TestCase
     def test_imaps_with_ca_file
       assert_nothing_raised do
         imaps_test do |port|
-          begin
-            Net::IMAP.new("localhost",
-                          :port => port,
-                          :ssl => { :ca_file => CA_FILE })
-          rescue SystemCallError
-            skip $!
-          end
+          Net::IMAP.new("localhost",
+                        :port => port,
+                        :ssl => { :ca_file => CA_FILE })
         end
       end
     end
@@ -99,7 +91,7 @@ class IMAPTest < Test::Unit::TestCase
       end
     end
 
-    def test_imaps_post_connection_check
+    def test_imaps_verify_hostname
       assert_raise(OpenSSL::SSL::SSLError) do
         imaps_test do |port|
           # server_addr is different from the hostname in the certificate,
@@ -110,9 +102,7 @@ class IMAPTest < Test::Unit::TestCase
         end
       end
     end
-  end
 
-  if defined?(OpenSSL::SSL)
     def test_starttls
       imap = nil
       starttls_test do |port|
@@ -120,8 +110,6 @@ class IMAPTest < Test::Unit::TestCase
         imap.starttls(:ca_file => CA_FILE)
         imap
       end
-    rescue SystemCallError
-      skip $!
     ensure
       if imap && !imap.disconnected?
         imap.disconnect
