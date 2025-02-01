@@ -30,13 +30,9 @@ class IMAPTest < Test::Unit::TestCase
     def test_imaps_unknown_ca
       assert_raise(OpenSSL::SSL::SSLError) do
         imaps_test do |port|
-          begin
-            Net::IMAP.new("localhost",
-                          :port => port,
-                          :ssl => true)
-          rescue SystemCallError
-            skip $!
-          end
+          Net::IMAP.new("localhost",
+                        :port => port,
+                        :ssl => true)
         end
       end
     end
@@ -53,8 +49,6 @@ class IMAPTest < Test::Unit::TestCase
                                 ssl: { :ca_file => CA_FILE })
             verified = imap.tls_verified?
             imap
-          rescue SystemCallError
-            skip $!
           end
         rescue OpenSSL::SSL::SSLError => e
           raise e unless /darwin/ =~ RUBY_PLATFORM
@@ -110,8 +104,6 @@ class IMAPTest < Test::Unit::TestCase
 
   if defined?(OpenSSL::SSL)
     def test_starttls_unknown_ca
-      omit "This test is not working with Windows" if RUBY_PLATFORM =~ /mswin|mingw/
-
       imap = nil
       assert_raise(OpenSSL::SSL::SSLError) do
         ex = nil
@@ -146,8 +138,6 @@ class IMAPTest < Test::Unit::TestCase
       assert_equal nil,   initial_ctx
       assert_equal true, imap.tls_verified?
       assert_equal({ca_file: CA_FILE}, imap.ssl_ctx_params)
-    rescue SystemCallError
-      skip $!
     ensure
       if imap && !imap.disconnected?
         imap.disconnect
